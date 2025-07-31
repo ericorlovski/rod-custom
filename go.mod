@@ -1,4 +1,4 @@
-module github.com/go-rod/rod
+module github.com/ericorlovski/rod-custom
 
 go 1.21
 
