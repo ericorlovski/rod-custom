@@ -128,26 +128,31 @@ func (lc *Browser) BinPath() string {
 // Download browser from the fastest host.
 // It will race downloading a TCP packet from each host and use the fastest host.
 func (lc *Browser) Download() error {
-	us := []string{}
+	var us []string
 	for _, host := range lc.Hosts {
 		us = append(us, host(lc.Revision))
 	}
 
-	dir := lc.Dir()
+	allURLs := append([]string{}, us...)
 
-	fu := fetchup.New(dir, us...)
-	fu.Ctx = lc.Context
-	fu.Logger = lc.Logger
+	fu := fetchup.New(allURLs...).
+		WithSaveTo(lc.Dir()).
+		WithLogger(lc.Logger)
+
+	if lc.Context != nil {
+		fu = fu.WithContext(lc.Context)
+	}
+
 	if lc.HTTPClient != nil {
 		fu.HttpClient = lc.HTTPClient
 	}
 
 	err := fu.Fetch()
 	if err != nil {
-		return fmt.Errorf("can't find a browser binary for your OS, the doc might help https://go-rod.github.io/#/compatibility?id=os : %w", err) //nolint: lll
+		return fmt.Errorf("Can't find a browser binary for your OS, the doc might help https://go-rod.github.io/#/compatibility?id=os : %w", err)
 	}
 
-	return fetchup.StripFirstDir(dir)
+	return fetchup.StripFirstDir(lc.Dir())
 }
 
 // Get is a smart helper to get the browser executable path.
